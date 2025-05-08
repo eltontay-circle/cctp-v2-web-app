@@ -18,7 +18,7 @@ import {
 } from "viem";
 import { privateKeyToAccount, nonceManager } from "viem/accounts";
 import axios from "axios";
-import { sepolia, avalancheFuji, baseSepolia } from "viem/chains";
+import { sepolia, avalancheFuji, baseSepolia, sonicBlazeTestnet } from "viem/chains";
 import {
   SupportedChainId,
   CHAIN_IDS_TO_USDC_ADDRESSES,
@@ -40,6 +40,7 @@ const chains = {
   [SupportedChainId.ETH_SEPOLIA]: sepolia,
   [SupportedChainId.AVAX_FUJI]: avalancheFuji,
   [SupportedChainId.BASE_SEPOLIA]: baseSepolia,
+  [SupportedChainId.SONIC_BLAZE]: sonicBlazeTestnet
 };
 
 export function useCrossChainTransfer() {
