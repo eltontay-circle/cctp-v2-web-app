@@ -4,6 +4,7 @@ This sample application demonstrates Cross-Chain Transfer Protocol (CCTP) step-b
 - Ethereum Sepolia
 - Avalanche Fuji C-Chain
 - Base Sepolia
+- Sonic Blaze
 
 ## Environment Setup
 
