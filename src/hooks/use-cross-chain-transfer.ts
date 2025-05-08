@@ -101,7 +101,8 @@ export function useCrossChainTransfer() {
 
   const approveUSDC = async (
     client: WalletClient<HttpTransport, Chain, Account>,
-    sourceChainId: number
+    sourceChainId: number,
+    amount: bigint
   ) => {
     setCurrentStep("approving");
     addLog("Approving USDC transfer...");
@@ -123,7 +124,7 @@ export function useCrossChainTransfer() {
             },
           ],
           functionName: "approve",
-          args: [CHAIN_IDS_TO_TOKEN_MESSENGER[sourceChainId], 10000000000n],
+          args: [CHAIN_IDS_TO_TOKEN_MESSENGER[sourceChainId], amount],
         }),
       });
 
@@ -315,7 +316,7 @@ export function useCrossChainTransfer() {
         return balance;
       };
 
-      await approveUSDC(sourceClient, sourceChainId);
+      await approveUSDC(sourceClient, sourceChainId, numericAmount);
       const burnTx = await burnUSDC(
         sourceClient,
         sourceChainId,
