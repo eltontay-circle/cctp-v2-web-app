@@ -108,6 +108,8 @@ export function useCrossChainTransfer() {
     addLog("Approving USDC transfer...");
 
     try {
+      addLog(`Approving amount: ${amount.toString()}`);
+
       const tx = await client.sendTransaction({
         to: CHAIN_IDS_TO_USDC_ADDRESSES[sourceChainId] as `0x${string}`,
         data: encodeFunctionData({
@@ -153,6 +155,8 @@ export function useCrossChainTransfer() {
       const mintRecipient = `0x${destinationAddress
         .replace(/^0x/, "")
         .padStart(64, "0")}`;
+
+      addLog(`Burn args: amount=${amount.toString()}, destDomain=${DESTINATION_DOMAINS[destinationChainId]}, mintRecipient=${mintRecipient}, burnToken=${CHAIN_IDS_TO_USDC_ADDRESSES[sourceChainId]}, maxFee=${maxFee.toString()}, finalityThreshold=${finalityThreshold}`);
 
       const tx = await client.sendTransaction({
         to: CHAIN_IDS_TO_TOKEN_MESSENGER[sourceChainId] as `0x${string}`,
@@ -308,15 +312,16 @@ export function useCrossChainTransfer() {
       const defaultDestination = account.address;
       const sourceClient = getClients(privateKey, sourceChainId);
       const destinationClient = getClients(privateKey, destinationChainId);
-      const checkNativeBalance = async (chainId: SupportedChainId) => {
-        const publicClient = getPublicClient(chainId);
-        const balance = await publicClient.getBalance({
-          address: defaultDestination,
-        });
-        return balance;
-      };
+      const publicClient = getPublicClient(sourceChainId);
 
-      await approveUSDC(sourceClient, sourceChainId, numericAmount);
+      addLog(`Source Chain: ${chains[sourceChainId as SupportedChainId].name}`);
+      addLog(`Using address: ${account.address}`);
+
+      const approveTx = await approveUSDC(sourceClient, sourceChainId, numericAmount);
+      addLog(`Waiting for approval transaction confirmation...`);
+      const approveReceipt = await publicClient.waitForTransactionReceipt({ hash: approveTx });
+      addLog(`Approval status: ${approveReceipt.status}`);
+
       const burnTx = await burnUSDC(
         sourceClient,
         sourceChainId,
@@ -325,9 +330,16 @@ export function useCrossChainTransfer() {
         defaultDestination,
         transferType
       );
+      addLog(`Waiting for burn transaction confirmation...`);
+      const burnReceipt = await publicClient.waitForTransactionReceipt({ hash: burnTx });
+      addLog(`Burn status: ${burnReceipt.status}`);
+
       const attestation = await retrieveAttestation(burnTx, sourceChainId);
       const minBalance = parseEther("0.01"); // 0.01 native token
-      const balance = await checkNativeBalance(destinationChainId);
+      const destinationPublicClient = getPublicClient(destinationChainId);
+      const balance = await destinationPublicClient.getBalance({
+        address: defaultDestination,
+      });
       if (balance < minBalance) {
         throw new Error("Insufficient native token for gas fees");
       }
